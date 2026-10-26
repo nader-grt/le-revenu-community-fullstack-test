@@ -1,0 +1,22 @@
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: le-revenu-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: le_revenu
+      POSTGRES_USER: le_revenu_user
+      POSTGRES_PASSWORD: local_dev_password_change_me
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U le_revenu_user -d le_revenu"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:
