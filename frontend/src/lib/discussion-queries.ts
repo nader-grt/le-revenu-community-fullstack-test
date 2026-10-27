@@ -16,6 +16,7 @@ export interface DiscussionFilters {
   sort?: DiscussionSort;
   page?: number;
   pageSize?: number;
+  q?:string; 
 }
 
 export interface DiscussionPagination {
@@ -84,6 +85,9 @@ export async function getDiscussions(
     params.set("filters[category][slug][$eq]", filters.category);
   }
 
+    if (filters.q?.trim()) {
+    params.set("filters[title][$containsi]", filters.q.trim());
+  }
   const response = await fetch(
     `${API_URL}/api/discussions?${params.toString()}`,
     { cache: "no-store" },

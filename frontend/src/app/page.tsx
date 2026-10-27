@@ -12,6 +12,7 @@ interface HomeProps {
     category?: string;
     sort?: string;
     page?: string;
+    q?: string;
   }>;
 }
 
@@ -43,6 +44,7 @@ export default async function Home({ searchParams }: HomeProps) {
         sort: validSort,
         page,
         pageSize: 10,
+        q: query.q,
       }),
     ]);
 
@@ -89,7 +91,9 @@ export default async function Home({ searchParams }: HomeProps) {
           </p>
         ) : discussions.length === 0 ? (
           <p className="mt-8 rounded-lg bg-white p-6 text-gray-600">
-            Aucune discussion publiée pour le moment.
+            {query.q?.trim()
+              ? `Aucune discussion trouvée pour « ${query.q.trim()} ».`
+              : "Aucune discussion publiée pour le moment."}
           </p>
         ) : (
           <div className="mt-8 space-y-4">
