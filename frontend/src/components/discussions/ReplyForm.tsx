@@ -1,11 +1,8 @@
-
 "use client";
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-
-const API_URL =
-  process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+import { getStrapiURL } from "@/lib/api";
 
 type ReplyFormProps = {
   discussionDocumentId: string;
@@ -18,9 +15,7 @@ function getErrorMessage(
   return body.error?.message ?? body.message ?? fallback;
 }
 
-export default function ReplyForm({
-  discussionDocumentId,
-}: ReplyFormProps) {
+export default function ReplyForm({ discussionDocumentId }: ReplyFormProps) {
   const router = useRouter();
   const [content, setContent] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
@@ -50,7 +45,7 @@ export default function ReplyForm({
     setSubmitting(true);
 
     try {
-      const response = await fetch(`${API_URL}/api/replies`, {
+      const response = await fetch(`${getStrapiURL()}/api/replies`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -73,10 +68,7 @@ export default function ReplyForm({
 
       if (!response.ok) {
         throw new Error(
-          getErrorMessage(
-            body,
-            "Impossible de publier votre réponse.",
-          ),
+          getErrorMessage(body, "Impossible de publier votre réponse."),
         );
       }
 
@@ -118,13 +110,19 @@ export default function ReplyForm({
       />
 
       {errorMessage && (
-        <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
+        <p
+          role="alert"
+          className="rounded-lg bg-red-50 p-3 text-sm text-red-700"
+        >
           {errorMessage}
         </p>
       )}
 
       {successMessage && (
-        <p role="status" className="rounded-lg bg-green-50 p-3 text-sm text-green-700">
+        <p
+          role="status"
+          className="rounded-lg bg-green-50 p-3 text-sm text-green-700"
+        >
           {successMessage}
         </p>
       )}

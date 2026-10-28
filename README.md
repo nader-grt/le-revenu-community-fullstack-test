@@ -1,34 +1,39 @@
 # Le Revenu Community
 
-Application communautaire développée dans le cadre d’un test technique Full Stack. Elle permet aux lecteurs du média *Le Revenu* d’échanger autour de l’information financière, des placements et de l’investissement.
+Application communautaire développée dans le cadre d’un test technique Full Stack. Elle permet aux lecteurs du média **Le Revenu** d’échanger autour de l’actualité financière, des placements et de l’investissement.
 
 ## Stack technique
 
 - **Frontend :** Next.js 16, React 19, TypeScript, Tailwind CSS
 - **Backend :** Strapi v5, TypeScript, API REST
 - **Base de données :** PostgreSQL 17
-- **Environnement local :** Docker Compose, Node.js et npm
+- **Environnement :** Docker Compose, Node.js et npm
+- **Tests :** Jest pour le backend, scripts de lint et de build pour le frontend
 
-## Architecture
+## Architecture du projet
 
 ```text
 le-revenu-community-fullstack-test/
-├── backend/          # API Strapi
-├── frontend/         # Application Next.js
-├── docker-compose.yml
+├── backend/              # API Strapi
+├── frontend/             # Application Next.js
+├── docker-compose.yml    # Orchestration des services
+├── .env                  # Variables d’environnement locales
 └── README.md
 ```
 
-Le frontend communique avec le backend via l’API REST de Strapi. PostgreSQL assure la persistance des données. Le frontend ne se connecte pas directement à la base de données.
+Le frontend communique avec le backend via l’API REST de Strapi. PostgreSQL assure la persistance des données. Le frontend ne se connecte jamais directement à la base de données.
+
+Le projet utilise Docker Compose pour orchestrer les services et faciliter la mise en place de l’environnement local.
 
 ## Prérequis
 
-Installer les outils suivants :
+Avant de commencer, installer les outils suivants :
 
 - Git
-- Node.js compatible avec les versions déclarées dans les `package.json`
+- Node.js, dans une version compatible avec le projet
 - npm
-- Docker et Docker Compose
+- Docker
+- Docker Compose
 
 ## Installation et démarrage
 
@@ -39,32 +44,65 @@ git clone <URL_DU_DEPOT>
 cd le-revenu-community-fullstack-test
 ```
 
-Remplacer `<URL_DU_DEPOT>` par l’URL du dépôt GitHub.
+Remplacer `<URL_DU_DEPOT>` par l’URL réelle du dépôt Git.
 
-### 2. Démarrer PostgreSQL
+### 2. Configurer les variables d’environnement
+
+À la racine du projet, créer ou compléter le fichier `.env` avec les variables nécessaires au fonctionnement de Strapi et de PostgreSQL.
+
+Les secrets doivent être générés localement et conservés privés. Ne jamais publier le fichier `.env` ni inclure de véritables clés, mots de passe ou tokens dans le dépôt Git.
+
+Les variables requises dépendent de la configuration du projet, notamment :
+
+- Les clés de l’application Strapi (`APP_KEYS`)
+- Le secret JWT de l’administration (`ADMIN_JWT_SECRET`)
+- Le sel des API tokens (`API_TOKEN_SALT`)
+- Le sel des tokens de transfert (`TRANSFER_TOKEN_SALT`)
+- La clé de chiffrement de l’administration (`ENCRYPTION_KEY`)
+- Les paramètres de connexion à PostgreSQL
+
+Vérifier également que les variables nécessaires sont bien transmises au service `backend` dans `docker-compose.yml`.
+
+### 3. Démarrer les services Docker
 
 Depuis la racine du projet :
 
 ```bash
-docker compose up -d postgres
+docker compose up -d
 docker compose ps
 ```
 
-Le service PostgreSQL utilise le port `5433` sur la machine hôte et le port `5432` dans le conteneur.
+Cette commande démarre les services définis dans `docker-compose.yml`, notamment PostgreSQL, le backend et le frontend.
 
-La base de données locale est configurée avec les paramètres suivants dans `docker-compose.yml` :
+Pour consulter les logs :
 
-- Base : `le_revenu`
-- Utilisateur : `le_revenu_user`
-- Port hôte : `5433`
+```bash
+docker compose logs -f backend
+docker compose logs -f frontend
+docker compose logs -f postgres
+```
 
-Le mot de passe défini dans le fichier Compose est destiné au développement local uniquement.
+Attendre que les services soient opérationnels avant d’accéder à l’application.
 
-### 3. Configurer et démarrer le backend
+### 4. Accéder à l’application
 
-Vérifier les variables d’environnement requises par Strapi et PostgreSQL. Utiliser les fichiers d’exemple disponibles lorsqu’ils existent, sans publier de secrets réels.
+Lorsque les services ont démarré correctement, les adresses locales sont les suivantes :
 
-Puis exécuter :
+| Service | URL |
+|---|---|
+| Frontend Next.js | http://localhost:3000 |
+| API Strapi | http://localhost:1337 |
+| Administration Strapi | http://localhost:1337/admin |
+
+Ces adresses correspondent à la configuration locale actuelle et supposent que les ports par défaut sont disponibles.
+
+Lors du premier démarrage, créer le compte administrateur Strapi depuis l’interface d’administration si aucun compte n’existe déjà.
+
+### 5. Lancer les composants séparément (optionnel)
+
+Si tu souhaites lancer le backend et le frontend hors de Docker, vérifie d’abord que PostgreSQL est accessible et que les variables d’environnement sont correctement configurées.
+
+**Backend :**
 
 ```bash
 cd backend
@@ -72,13 +110,7 @@ npm install
 npm run develop
 ```
 
-L’API Strapi est accessible à `http://localhost:1337` si le port par défaut est conservé. L’interface d’administration est accessible à `http://localhost:1337/admin`.
-
-Vérifier que la configuration de la base de données correspond au mode de lancement : depuis la machine hôte, PostgreSQL est accessible sur le port `5433`; depuis un autre conteneur du même réseau Docker, utiliser le nom du service et le port interne `5432`.
-
-### 4. Configurer et démarrer le frontend
-
-Dans un autre terminal :
+**Frontend**, dans un autre terminal :
 
 ```bash
 cd frontend
@@ -86,81 +118,94 @@ npm install
 npm run dev
 ```
 
-Le frontend Next.js est accessible à `http://localhost:3000`.
+Dans ce mode, la configuration de connexion à PostgreSQL doit utiliser le port `5433` depuis la machine hôte. Depuis un autre conteneur du même réseau Docker, le service PostgreSQL est accessible via son nom de service et le port interne `5432`.
 
-Vérifier que l’URL de l’API configurée dans le frontend correspond à l’adresse du backend.
+Éviter de lancer simultanément plusieurs instances du backend ou du frontend sur les mêmes ports.
 
-## Fonctionnalités
+## Fonctionnalités principales
 
-Le périmètre fonctionnel comprend :
+Le périmètre fonctionnel de l’application comprend :
 
-- Consultation des discussions.
-- Filtrage par catégorie.
-- Consultation du détail d’une discussion.
-- Affichage des réponses associées.
-- Création de discussions.
-- Publication de réponses avec authentification.
+- Consultation des discussions
+- Filtrage des discussions par catégorie
+- Consultation du détail d’une discussion
+- Affichage des réponses associées
+- Création de discussions
+- Publication de réponses avec authentification
 
-L’état de validation de chaque fonctionnalité doit être confirmé par les tests effectués sur l’environnement local avant la livraison.
+L’état de fonctionnement de chaque fonctionnalité doit être confirmé par les tests réalisés sur l’environnement local.
 
 ## API REST
 
-Les endpoints de lecture suivants sont documentés pour l’application :
+Les endpoints de lecture documentés pour l’application sont les suivants :
 
 | Méthode | Endpoint | Description |
 |---|---|---|
-| GET | `/api/categories` | Récupération des catégories |
-| GET | `/api/discussions` | Récupération des discussions |
-| GET | `/api/discussions/:documentId` | Détail d’une discussion |
-| GET | `/api/replies` | Récupération des réponses |
+| `GET` | `/api/categories` | Récupération des catégories |
+| `GET` | `/api/discussions` | Récupération des discussions |
+| `GET` | `/api/discussions/:documentId` | Consultation du détail d’une discussion |
+| `GET` | `/api/replies` | Récupération des réponses |
 
-Pour les relations, les paramètres `populate` de Strapi peuvent être utilisés selon les besoins de l’interface et les permissions configurées.
+Les paramètres de requête Strapi, notamment `populate`, peuvent être utilisés pour charger les relations nécessaires à l’interface, selon les permissions configurées.
 
-Les endpoints de création doivent être testés avec les règles d’authentification et d’autorisation applicables.
+Les endpoints de création et de modification doivent respecter les règles d’authentification, d’autorisation et de validation définies côté backend.
 
 ## Validation et sécurité
 
-Les règles métier doivent être appliquées côté backend, indépendamment des contrôles du frontend. Les vérifications à effectuer comprennent notamment :
+Les règles métier doivent être appliquées côté backend, indépendamment des contrôles effectués dans le frontend.
 
-- Authentification obligatoire pour les opérations protégées.
-- Attribution de l’auteur à partir de l’utilisateur authentifié.
-- Refus de faire confiance à un identifiant d’auteur fourni par le client.
-- Validation des champs obligatoires et des longueurs minimales.
-- Vérification de la cohérence des relations entre discussions, catégories et réponses.
-- Configuration des permissions Strapi par rôle.
-- Gestion cohérente des codes HTTP et des erreurs.
+Les principaux points de contrôle comprennent :
 
-## Tests
+- Authentification obligatoire pour les opérations protégées
+- Attribution de l’auteur à partir de l’utilisateur authentifié
+- Refus de faire confiance à un identifiant d’auteur fourni par le client
+- Validation des champs obligatoires et des longueurs minimales
+- Vérification de la cohérence des relations entre discussions, catégories et réponses
+- Configuration des permissions Strapi selon les rôles
+- Gestion cohérente des codes HTTP et des erreurs
+- Protection des secrets et des variables d’environnement
 
-Le backend dispose d’un script Jest accessible depuis le dossier `backend` :
+Ces contrôles doivent être vérifiés par des tests adaptés avant la livraison.
+
+## Tests et vérifications
+
+### Backend
+
+Depuis le dossier `backend` :
 
 ```bash
 npm test
 ```
 
-Le frontend dispose notamment des scripts suivants :
+### Frontend
+
+Depuis le dossier `frontend` :
 
 ```bash
 npm run lint
 npm run build
 ```
 
-Exécuter ces commandes dans les dossiers concernés et corriger les erreurs avant la livraison. Les résultats des tests ne doivent être annoncés comme validés qu’après leur exécution effective.
+Exécuter ces commandes dans les dossiers concernés et corriger les erreurs éventuelles avant la livraison. Les résultats ne doivent être présentés comme validés qu’après exécution effective des commandes.
 
-## Docker Compose
+## Gestion de Docker Compose
 
-Le fichier `docker-compose.yml` configure actuellement le service PostgreSQL et son volume persistant.
-
-Démarrer les services définis :
+Démarrer les services :
 
 ```bash
 docker compose up -d
 ```
 
-Consulter les logs :
+Afficher l’état des conteneurs :
 
 ```bash
-docker compose logs -f postgres
+docker compose ps
+```
+
+Consulter les logs du backend :
+
+```bash
+docker compose logs -f backend
 ```
 
 Arrêter les services :
@@ -169,21 +214,35 @@ Arrêter les services :
 docker compose down
 ```
 
-La commande `docker compose down` conserve le volume de données. Ne pas utiliser `docker compose down -v` si les données locales doivent être conservées.
+La commande `docker compose down` arrête et supprime les conteneurs et le réseau du projet, mais conserve normalement le volume nommé `postgres_data`.
 
-Le frontend et le backend se lancent séparément avec les commandes indiquées plus haut.
+**Attention :** ne pas utiliser `docker compose down -v` si les données locales doivent être conservées, car cette commande peut supprimer les volumes associés au projet.
 
 ## Améliorations possibles
 
-- Recherche et pagination des discussions.
-- Tests end-to-end.
-- Données de démonstration reproductibles.
-- Amélioration de la gestion des erreurs et des états de chargement.
-- Votes et mise en avant de la meilleure réponse.
+Plusieurs évolutions peuvent être envisagées :
+
+- Ajout d’une recherche et d’une pagination avancées des discussions
+- Mise en place de tests end-to-end
+- Création de données de démonstration reproductibles
+- Amélioration de la gestion des erreurs et des états de chargement
+- Ajout de fonctionnalités de vote
+- Possibilité de mettre en avant la meilleure réponse
 
 La priorité reste la fiabilité des fonctionnalités principales, la validation côté serveur, la sécurité et la reproductibilité de l’installation.
 
+---
 
+## Informations sur le projet
+
+- **Nom :** Nader Chargui
+- **Projet :** Le Revenu Community
+- **Frontend :** Next.js, React, TypeScript, Tailwind CSS
+- **Backend :** Strapi v5, TypeScript, API REST
+- **Base de données :** PostgreSQL
+- **Environnement :** Docker Compose
+
+**Contact :** à renseigner dans la version destinée à la livraison.
 ---
 **FullName && email &&Number:** NADER CHARGUI  && charguinadar@gmail.com   95120814  
 **Projet :** Le Revenu Community  

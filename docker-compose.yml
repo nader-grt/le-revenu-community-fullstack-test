@@ -1,4 +1,6 @@
 
+name: le-revenu-community
+
 services:
   postgres:
     image: postgres:17-alpine
@@ -7,7 +9,7 @@ services:
     environment:
       POSTGRES_DB: le_revenu
       POSTGRES_USER: le_revenu_user
-      POSTGRES_PASSWORD: local_dev_password_change_me
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local_dev_password_change_me}
     ports:
       - "5433:5432"
     volumes:
@@ -17,6 +19,61 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+      start_period: 5s
+    networks:
+      - app-net
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: le-revenu-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      HOST: 0.0.0.0
+      PORT: 1337
+      APP_KEYS: ${APP_KEYS}
+      API_TOKEN_SALT: ${API_TOKEN_SALT}
+      TRANSFER_TOKEN_SALT: ${TRANSFER_TOKEN_SALT}
+      ADMIN_JWT_SECRET: ${ADMIN_JWT_SECRET}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      DATABASE_CLIENT: postgres
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_NAME: le_revenu
+      DATABASE_USERNAME: le_revenu_user
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-local_dev_password_change_me}
+      DATABASE_SSL: "false"
+    ports:
+      - "1337:1337"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: le-revenu-frontend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      NEXT_PUBLIC_STRAPI_URL: http://localhost:1337
+      STRAPI_INTERNAL_URL: http://backend:1337
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - app-net
 
 volumes:
   postgres_data:
+
+networks:
+  app-net:
+    driver: bridge

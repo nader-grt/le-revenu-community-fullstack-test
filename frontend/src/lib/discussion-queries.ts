@@ -1,6 +1,8 @@
 import type { Discussion } from "@/lib/discussions";
 
-const API_URL = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+import { getStrapiURL } from "@/lib/api";
+
+//const API_URL = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
 
 export interface Category {
   id: number;
@@ -51,7 +53,7 @@ export async function getCategories(): Promise<Category[]> {
   params.set("sort[0]", "name:asc");
 
   const response = await fetch(
-    `${API_URL}/api/categories?${params.toString()}`,
+    `${getStrapiURL()}/api/categories?${params.toString()}`,
     { cache: "no-store" },
   );
 
@@ -89,7 +91,7 @@ export async function getDiscussions(
     params.set("filters[title][$containsi]", filters.q.trim());
   }
   const response = await fetch(
-    `${API_URL}/api/discussions?${params.toString()}`,
+    `${getStrapiURL()}/api/discussions?${params.toString()}`, 
     { cache: "no-store" },
   );
 

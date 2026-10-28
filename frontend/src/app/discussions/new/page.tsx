@@ -5,7 +5,13 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-import { API_URL, getErrorMessage, type StrapiErrorResponse } from "../../../lib/api";
+//import { API_URL, getErrorMessage, type StrapiErrorResponse } from "../../../lib/api";
+
+import {
+  getStrapiURL,
+  getErrorMessage,
+  type StrapiErrorResponse,
+} from "../../../lib/api";
 import { useCategories } from "../../../hooks/useCategories";
 import { useDiscussionAuth } from "../../../hooks/useDiscussionAuth";
 import DiscussionForm, {
@@ -58,7 +64,7 @@ export default function NewDiscussionPage() {
     setSubmitting(true);
 
     try {
-      const response = await fetch(`${API_URL}/api/discussions`, {
+      const response = await fetch(`${getStrapiURL()}/api/discussions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

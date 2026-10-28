@@ -1,3 +1,6 @@
+import { getStrapiURL } from "@/lib/api";
+
+
 const API_URL =
   process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
 
@@ -100,7 +103,7 @@ export async function getDiscussions(
   }
 
   const response = await fetch(
-    `${API_URL}/api/discussions?${params.toString()}`,
+    `${getStrapiURL()}/api/discussions?${params.toString()}`,
     { cache: "no-store" },
   );
 
@@ -126,7 +129,7 @@ export async function getDiscussion(
   params.set("populate[replies]", "true");
 
   const response = await fetch(
-    `${API_URL}/api/discussions/${encodeURIComponent(documentId)}?${params.toString()}`,
+    `${getStrapiURL()}/api/discussions/${encodeURIComponent(documentId)}?${params.toString()}`,
     { cache: "no-store" },
   );
 

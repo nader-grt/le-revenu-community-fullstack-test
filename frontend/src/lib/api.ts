@@ -1,6 +1,6 @@
 
-export const API_URL =
-  process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+//export const API_URL =
+  //process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
 
 export interface StrapiErrorResponse {
   error?: {
@@ -28,3 +28,21 @@ export function getErrorMessage(
 
   return body.error?.message || body.message || fallback;
 }
+
+
+
+export function getStrapiURL(): string {
+  if (typeof window !== "undefined") {
+    // Browser: the browser accesses the published host port.
+    return process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+  }
+
+  // Next.js Server Components inside Docker.
+  return (
+    process.env.STRAPI_INTERNAL_URL ||
+    process.env.NEXT_PUBLIC_STRAPI_URL ||
+    "http://localhost:1337"
+  );
+}
+
+export const API_URL = getStrapiURL();
